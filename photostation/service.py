@@ -51,12 +51,19 @@ class PhotoStationAlbum(object):
     @classmethod
     def from_photostation(cls, parent, psalbum):
         album_path = PhotoStationUtils.album_path(psalbum['id'])
-        name = album_path.replace(parent.path + '/', '')
-
+        if parent.path:
+            name = album_path.decode().replace(parent.path + '/', '')
+        else:
+            name = album_path.decode()
         return cls(parent, name)
 
     def __str__(self):
-        return '{path:' + self.path + ',name:' + self.name + '}'
+        d = {
+            'path': self.path, 
+            'name': self.name, 
+            'id': PhotoStationUtils.album_id(self.path)
+        }
+        return str(d)
 
     def item(self, name):
         return self.items.get(name)
@@ -159,16 +166,18 @@ class PhotoStationPhoto(object):
             longitude = longitude)
 
     def __str__(self):
-        return '{filename:' + self.filename.decode('utf-8').encode('unicode-escape') + \
-            ',filetype:' + self.filetype + \
-            ',created:' + str(self.created) + \
-            ',modified:' + str(self.modified) + \
-            ',filesize:' + str(self.filesize) + \
-            ',title:' + self.title.decode('utf-8').encode('unicode-escape') + \
-            ',description:' + self.description.decode('utf-8').encode('unicode-escape') + \
-            ',rating:' + str(self.rating) + \
-            ',latitude:' + str(self.latitude) + \
-            ',longitude:' + str(self.longitude) + '}'
+        d = {'filename': self.filename.decode('utf-8').encode('unicode-escape'),
+            'filetype': self.filetype ,
+            'created': str(self.created),
+            'modified': str(self.modified),
+            'filesize': str(self.filesize),
+            'title': self.title.decode('utf-8').encode('unicode-escape'),
+            'description': self.description.decode('utf-8').encode('unicode-escape'),
+            'rating': str(self.rating),
+            'latitude': str(self.latitude),
+            'longitude': str(self.longitude)
+        }
+        return str(d)
 
     @property
     def fullpath(self):
@@ -255,3 +264,25 @@ class PhotoStationPhoto(object):
             'ps_username': PhotoStationService.session.username
             })
         self.album.remove_item(self.filename)
+
+    @property
+    def tags(self):
+        return PhotoStationPhotoTag(self).tags()
+
+class PhotoStationPhotoTag(object):
+
+    def __init__(self, photoStationPhoto):
+        self.photoStationPhoto = photoStationPhoto
+        self.photoStationPhotoId = PhotoStationUtils.photo_id(self.photoStationPhoto.filetype, self.photoStationPhoto.album.path, self.photoStationPhoto.filename)
+        self._tags = None
+
+    def tags(self):
+        data = {
+            'id': self.photoStationPhotoId,
+            'type': 'people,desc,geo',
+            'method': 'list',
+            'additional': 'info',
+            'ps_username': PhotoStationService.session.username
+        }
+        self._tags = PhotoStationService.session.query('SYNO.PhotoStation.PhotoTag', data)
+        return self._tags
