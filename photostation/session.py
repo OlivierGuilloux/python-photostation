@@ -117,7 +117,7 @@ class SynologyAuthSession(SynologySession):
         if not os.path.isdir(os.path.dirname(cookiefile)):
             return False
         print('save cookies to file ' + cookiefile)
-        with open(cookiefile, 'w') as f:
+        with open(cookiefile, 'wb') as f:
             f.truncate()
             pickle.dump(self.session.cookies._cookies, f)
 
@@ -127,7 +127,7 @@ class SynologyAuthSession(SynologySession):
             return False
 
         print('load cookies from file ' + cookiefile)
-        with open(cookiefile) as f:
+        with open(cookiefile, 'rb') as f:
             cookies = pickle.load(f)
             if cookies:
                 jar = requests.cookies.RequestsCookieJar()
