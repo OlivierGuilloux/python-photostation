@@ -1,8 +1,14 @@
-
+import codecs
 class PhotoStationUtils(object):
     @staticmethod
-    def ascii2hex(str):
-        return ''.join(x.encode('hex') for x in str)
+    def ascii2hex(s):
+        """
+        XXX sometime str sometime bytes : fix it
+        """
+        if type(s) == type(''):
+            return codecs.encode(bytes(s, 'utf-8'), 'hex').decode()
+        else:
+            return codecs.encode(s, 'hex').decode()
 
     @staticmethod
     def hex2ascii(hex):
