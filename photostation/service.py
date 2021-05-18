@@ -269,6 +269,16 @@ class PhotoStationPhoto(object):
     def tags(self):
         return PhotoStationPhotoTag(self).tags()
 
+    def download(self):
+        data = {
+            'id': PhotoStationUtils.photo_id(self.filetype, self.album.path, self.filename),
+            'method': 'getphoto',
+            'download': 'true',
+            'no_structure': False
+        }
+        with open(f'/tmp/{self.filename.decode()}', 'wb') as f:
+            f.write(PhotoStationService.session.query('SYNO.PhotoStation.Download', data, 'file').content)
+
 class PhotoStationPhotoTag(object):
 
     def __init__(self, photoStationPhoto):

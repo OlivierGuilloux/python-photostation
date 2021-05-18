@@ -27,7 +27,7 @@ class SynologySession(object):
             'query': 'all'
             })
 
-    def query(self, api, data):
+    def query(self, api, data, response_type='json'):
         data.setdefault('api', api)
         data.setdefault('version', 1)
 
@@ -41,23 +41,26 @@ class SynologySession(object):
 
         #print('request: ' + r.url + ' with data ' + pformat(data))
 
-        return self.validate(api, data, r)
+        return self.validate(api, data, r, response_type=response_type)
 
-    def validate(self, api, request, response):
+    def validate(self, api, request, response, response_type='json'):
         if response.status_code is not 200:
             print('{} response with code {} and body {}'.format(api, response.status_code, response.text))
             raise SynologyException('The API request cannot been made')
 
-        rsp = response.json()
+        if response_type == 'json':
+            rsp = response.json()
 
-        if not rsp['success']:
-            print('{} response with code {} and body {} to query {}'.format(api, response.status_code, pformat(rsp), pformat(request)))
-            raise SynologyException(rsp['error']['code'])
+            if not rsp['success']:
+                print('{} response with code {} and body {} to query {}'.format(api, response.status_code, pformat(rsp), pformat(request)))
+                raise SynologyException(rsp['error']['code'])
 
-        if 'data' in rsp:
-            return rsp['data']
+            if 'data' in rsp:
+                return rsp['data']
+            else:
+                return rsp
         else:
-            return rsp
+            return response
 
 class SynologyAuthSession(SynologySession):
 
