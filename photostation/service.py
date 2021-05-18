@@ -37,6 +37,17 @@ class PhotoStationService(object):
     def query(api, params):
         return PhotoStationService.session.query(api, params)
 
+    @staticmethod
+    def list_tags():
+        data = {
+            'limit': 100,
+            'type': 'people',
+            'offset': 0,
+            'method': 'list'
+        }
+        return PhotoStationService.session.query('SYNO.PhotoStation.Tag', data)
+
+
 class PhotoStationAlbum(object):
 
     def __init__(self, parent, name):
@@ -296,3 +307,4 @@ class PhotoStationPhotoTag(object):
         }
         self._tags = PhotoStationService.session.query('SYNO.PhotoStation.PhotoTag', data)
         return self._tags
+
