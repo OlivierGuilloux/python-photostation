@@ -47,6 +47,16 @@ class PhotoStationService(object):
         }
         return PhotoStationService.session.query('SYNO.PhotoStation.Tag', data)
 
+    @staticmethod
+    def create_tag(name, tag_type="people"):
+        data = {
+            'name': name,
+            'type': tag_type,
+            'method': 'create'
+        }
+        return PhotoStationService.session.query('SYNO.PhotoStation.Tag', data)
+
+
 
 class PhotoStationAlbum(object):
 
@@ -149,6 +159,7 @@ class PhotoStationPhoto(object):
         self.rating = rating
         self.latitude = latitude
         self.longitude = longitude
+        self.ps_tag = PhotoStationPhotoTag(self)
 
     @classmethod
     def from_photostation(cls, album, psphoto):
@@ -278,7 +289,7 @@ class PhotoStationPhoto(object):
 
     @property
     def tags(self):
-        return PhotoStationPhotoTag(self).tags()
+        return self.ps_tag.tags()
 
     def download(self):
         data = {
@@ -289,6 +300,7 @@ class PhotoStationPhoto(object):
         }
         with open(f'/tmp/{self.filename.decode()}', 'wb') as f:
             f.write(PhotoStationService.session.query('SYNO.PhotoStation.Download', data, 'file').content)
+        return f'/tmp/{self.filename.decode()}'
 
 class PhotoStationPhotoTag(object):
 
@@ -308,3 +320,27 @@ class PhotoStationPhotoTag(object):
         self._tags = PhotoStationService.session.query('SYNO.PhotoStation.PhotoTag', data)
         return self._tags
 
+    def add_people_tag(self, tag_id, x, y, width, height):
+        """
+        Coordinates are percentages of the photo dimensions expressed as floats between 0.0 and 1.0.
+        """
+        data = {
+            'id': self.photoStationPhotoId,
+            'tag_id': tag_id,
+            'x': x,
+            'y': y,
+            'width': width,
+            'height': height,
+            'method': 'people_tag',
+            'confirm': False,
+        }
+        PhotoStationService.session.query('SYNO.PhotoStation.PhotoTag', data)
+
+    def people_tag_confirm(self, tag_id, confirm=True):
+        data = {
+            'id': self.photoStationPhotoId,
+            'tag_id': tag_id,
+            'confirm': confirm,
+            'method': 'people_tag_confirm'
+        }
+        PhotoStationService.session.query('SYNO.PhotoStation.PhotoTag', data)
